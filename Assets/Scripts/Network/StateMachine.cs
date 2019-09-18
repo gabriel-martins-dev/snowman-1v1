@@ -4,7 +4,7 @@ using System.Linq;
 using MLAPI;
 using MLAPI.Messaging;
 using UnityEngine;
-public enum ServerStateType
+public enum ServerModeType
 {
     Waiting,
     StartRound,
@@ -15,17 +15,18 @@ public enum ServerStateType
 
 public class ServerStateMachine
 {
-    Dictionary<ServerStateType, State> states;
-    State currentState;
+    Dictionary<ServerModeType, ServerMode> states;
+    ServerMode currentState;
 
     public ServerStateMachine()
     {
-        states = new Dictionary<ServerStateType, State>();
-        states.Add(ServerStateType.Waiting, new WaitingState(ChangeState));
-        states.Add(ServerStateType.StartRound, new StartRoundState(ChangeState));
+        states = new Dictionary<ServerModeType, ServerMode>();
+        states.Add(ServerModeType.Waiting, new WaitingMode(ChangeState));
+        states.Add(ServerModeType.StartRound, new StartRoundMode(ChangeState));
+        states.Add(ServerModeType.Round, new RoundMode(ChangeState));
     }
 
-    public void ChangeState(ServerStateType state)
+    public void ChangeState(ServerModeType state)
     {
         currentState?.OnExitState();
         currentState = states[state];
@@ -33,11 +34,11 @@ public class ServerStateMachine
     }
 }
 
-public abstract class State
+public abstract class ServerMode
 {
-    protected Action<ServerStateType> to;
+    protected Action<ServerModeType> to;
 
-    public State(Action<ServerStateType> to)
+    public ServerMode(Action<ServerModeType> to)
     {
         this.to = to;
     }
@@ -46,11 +47,11 @@ public abstract class State
     public abstract void OnExitState();
 }
 
-public class WaitingState : State
+public class WaitingMode : ServerMode
 {
     private List<PlayerConnector> connectors;
 
-    public WaitingState(Action<ServerStateType> to) : base(to)
+    public WaitingMode(Action<ServerModeType> to) : base(to)
     {
 
     }
@@ -61,12 +62,12 @@ public class WaitingState : State
 
         NetworkingManager.Singleton.OnServerStarted += ServerStartedHandler;
         NetworkingManager.Singleton.OnClientConnectedCallback += ClientConnectedHandler;
+
+
     }
 
     public override void OnExitState()
     {
-        Debug.Log("Moved to: " + connectors.Last().transform.position);
-
         connectors.Clear();
 
         NetworkingManager.Singleton.OnServerStarted -= ServerStartedHandler;
@@ -75,7 +76,7 @@ public class WaitingState : State
 
     private void ServerStartedHandler()
     {
-        Debug.Log("Server Started: " + NetworkingManager.Singleton.ConnectedClientsList.Count);
+        Debug.Log("Server Started");
 
         var clients = NetworkingManager.Singleton.ConnectedClientsList;
 
@@ -96,12 +97,15 @@ public class WaitingState : State
             NetworkingManager.Singleton.ConnectedClients[client]
             .PlayerObject.GetComponent<PlayerConnector>());
         connectors.Last().SetLocked(true);
-        connectors.Last().transform.position = (EnviromentManager.Singleton.GetSpawnPosition(connectors.Count - 1));
 
         if (HasAllPlayers())
         {
-            to(ServerStateType.StartRound);
+            to(ServerModeType.StartRound);
         }
+
+        ServerEventManager.TriggerEvent(ServerEventName.WaitingForPlayers);
+        // GameCanvasManager.Singleton.InvokeServerRpc(GameCanvasManager.Singleton.TEST);
+        //GameCanvasManager.Singleton.InvokeClientRpcOnEveryone(GameCanvasManager.Singleton.TriggerGameStateText, true, "Bunda");
     }
 
     private bool HasAllPlayers()
@@ -111,20 +115,72 @@ public class WaitingState : State
     }
 }
 
-public class StartRoundState : State
+public class StartRoundMode : ServerMode
 {
-    public StartRoundState(Action<ServerStateType> to) : base(to)
+    public StartRoundMode(Action<ServerModeType> to) : base(to)
     {
 
     }
 
     public override void OnEnterState()
     {
-        Debug.Log("StartRoundState!");
+        GameCanvasManager.Singleton.StartCoroutine(CountDownRoutine());
     }
 
     public override void OnExitState()
     {
+
+    }
+
+    public IEnumerator<WaitForSeconds> CountDownRoutine()
+    {
+        yield return new WaitForSeconds(0.1f);
+        ServerEventManager.TriggerEvent(ServerEventName.RoundStarting(3));
+        yield return new WaitForSeconds(1);
+        ServerEventManager.TriggerEvent(ServerEventName.RoundStarting(2));
+        yield return new WaitForSeconds(1);
+        ServerEventManager.TriggerEvent(ServerEventName.RoundStarting(1));
+        yield return new WaitForSeconds(1);
+
+        to(ServerModeType.Round);
+    }
+}
+
+public class RoundMode : ServerMode
+{
+    private List<PlayerConnector> connectors;
+
+    public RoundMode(Action<ServerModeType> to) : base(to)
+    {
+
+    }
+
+    public override void OnEnterState()
+    {
+        connectors = new List<PlayerConnector>();
+
+        var clients = NetworkingManager.Singleton.ConnectedClientsList;
+
+        foreach (var client in clients)
+        {
+            connectors.Add(client.PlayerObject.GetComponent<PlayerConnector>());
+            connectors.Last().SetLocked(false);
+        }
+
+        ServerEventManager.TriggerEvent(ServerEventName.RoundStarted);
+
+    }
+
+    public override void OnExitState()
+    {
+
+    }
+
+    public IEnumerator<WaitForSeconds> CountDownRoutine()
+    {
+        yield return new WaitForSeconds(2f);
+        ServerEventManager.TriggerEvent(ServerEventName.RoundStarted);
+        GameCanvasManager.Singleton.TriggerGameStateText(true, "GO!");
 
     }
 }

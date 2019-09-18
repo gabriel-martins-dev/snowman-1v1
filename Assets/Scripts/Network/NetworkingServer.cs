@@ -6,7 +6,6 @@ using UnityEngine;
 
 public class NetworkingServer : MonoBehaviour
 {
-    public NetworkingCommunicator comm;
     ServerStateMachine stateMachine;
 
     public void Initialize(bool isHost)
@@ -14,9 +13,9 @@ public class NetworkingServer : MonoBehaviour
         NetworkingManager.Singleton.ConnectionApprovalCallback = ApprovalCheck;
 
         stateMachine = new ServerStateMachine();
-        stateMachine.ChangeState(ServerStateType.Waiting);
+        stateMachine.ChangeState(ServerModeType.Waiting);
 
-        if (isHost) NetworkingManager.Singleton.StartHost();
+        if (isHost) NetworkingManager.Singleton.StartHost(EnviromentManager.Singleton.GetSpawnPosition(0));
         else NetworkingManager.Singleton.StartServer();
     }
 
@@ -28,7 +27,9 @@ public class NetworkingServer : MonoBehaviour
         bool approve = clients < 2;
 
         //If approve is true, the connection gets added. If it's false. The client gets disconnected
-        callback(true, null, approve, EnviromentManager.Singleton.GetSpawnPosition(clients), null);
+
+
+        callback(true, EnviromentManager.Singleton.GetPlayerHash(clients), approve, EnviromentManager.Singleton.GetSpawnPosition(clients), null);
     }
 
     private void OnGUI()

@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using MLAPI.Spawning;
+
 
 public class EnviromentManager : MonoBehaviour
 {
@@ -24,5 +26,13 @@ public class EnviromentManager : MonoBehaviour
     public Vector3 GetSpawnPosition(int index)
     {
         return spawns[index].position;
+    }
+
+    public ulong? GetPlayerHash(int index)
+    {
+        string name = index == 0 ? "BluePlayer" : "RedPlayer";
+        ulong? prefabHash = SpawnManager.GetPrefabHashFromGenerator(name);
+
+        return prefabHash;
     }
 }
