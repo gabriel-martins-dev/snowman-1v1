@@ -10,6 +10,7 @@ public class PlayerMovementComponent : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        Debug.Log(transform.position);
         Vector2 moveDirection = Vector2.zero;
 
         float vertical = input.verticalMovement;

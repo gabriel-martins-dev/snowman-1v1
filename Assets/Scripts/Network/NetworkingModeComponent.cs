@@ -4,14 +4,13 @@ using UnityEngine;
 public class NetworkingModeComponent : MonoBehaviour
 {
     [SerializeField] NetworkingManagerView view;
+    [SerializeField] NetworkingServer server;
 
     void Start()
     {
         view.onStartClient += StartClient;
         view.onStartServer += StartServer;
         view.onStartHost += StartHost;
-
-        NetworkingManager.Singleton.OnClientConnectedCallback += o => Debug.Log("Client Connected");
     }
 
     void StartClient()
@@ -22,13 +21,18 @@ public class NetworkingModeComponent : MonoBehaviour
 
     void StartServer()
     {
-        NetworkingManager.Singleton.StartServer();
+        SetupServer(false);
         view.Hide();
     }
 
     void StartHost()
     {
-        NetworkingManager.Singleton.StartHost();
+        SetupServer(true);
         view.Hide();
+    }
+
+    void SetupServer(bool isHost)
+    {
+        Instantiate(server).GetComponent<NetworkingServer>().Initialize(isHost);
     }
 }
