@@ -6,8 +6,9 @@ public class PlayerInputComponent : NetworkedBehaviour
 {
     public float verticalMovement { get; private set; }
     public float horizontalMovement { get; private set; }
+    public bool fire { get; private set; }
 
-    public NetworkedVar<bool> locked = new NetworkedVar<bool>(false);
+    private NetworkedVar<bool> locked = new NetworkedVar<bool>(false);
 
     void Update()
     {
@@ -20,6 +21,10 @@ public class PlayerInputComponent : NetworkedBehaviour
         horizontalMovement = IsLocalPlayer
             ? Input.GetAxis("Horizontal")
             : 0;
+
+        fire = IsLocalPlayer 
+            ? Input.GetButtonDown("Fire1")
+            : false;
     }
 
     public void SetLock(bool value)

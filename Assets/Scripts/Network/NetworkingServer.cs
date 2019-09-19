@@ -6,6 +6,8 @@ using UnityEngine;
 
 public class NetworkingServer : MonoBehaviour
 {
+    [SerializeField] AmmoPickup pickUp;
+
     ServerStateMachine stateMachine;
 
     public void Initialize(bool isHost)
@@ -34,6 +36,9 @@ public class NetworkingServer : MonoBehaviour
 
     private void OnGUI()
     {
-
+        if (GUI.Button(new Rect(20, 20, 100, 20), "SHOOT"))
+        {
+            Instantiate(pickUp).GetComponent<NetworkedObject>().Spawn();
+        }
     }
 }

@@ -6,14 +6,8 @@ public class PlayerHealthHUD : MonoBehaviour
 {
     [SerializeField] Slider healthBar;
 
-    void Start()
+    public void UpdateBarValue(float value)
     {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
+        healthBar.value = value;
     }
 }

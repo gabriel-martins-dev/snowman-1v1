@@ -41,7 +41,6 @@ public class GameCanvasManager : NetworkedBehaviour
 
     public void SetGameStateText(bool value, string text = "")
     {
-        if (IsClient) Debug.Log("SetGameStateText: ["  + value + "] - " + text);
         gameStatePanel.gameObject.SetActive(value);
         gameStateText.text = text;
     }

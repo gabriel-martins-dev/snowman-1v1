@@ -8,6 +8,8 @@ public class EnviromentManager : MonoBehaviour
 {
     private static EnviromentManager singleton;
     [SerializeField] Transform[] spawns;
+    [SerializeField] Transform pickupAreaLeftUpperCorner;
+    [SerializeField] Transform pickupAreaRightLowerCorner;
 
     public static EnviromentManager Singleton
     {
@@ -34,5 +36,18 @@ public class EnviromentManager : MonoBehaviour
         ulong? prefabHash = SpawnManager.GetPrefabHashFromGenerator(name);
 
         return prefabHash;
+    }
+
+    public Vector3 GetPickupSpawnPosition()
+    {
+        return new Vector3(
+            Random.Range(pickupAreaLeftUpperCorner.position.x, pickupAreaRightLowerCorner.position.x),
+            Random.Range(pickupAreaRightLowerCorner.position.y, pickupAreaLeftUpperCorner.position.y),
+            0);
+    }
+
+    public Vector3 GetPickupSpawnCenterPosition()
+    {
+        return (pickupAreaLeftUpperCorner.position + pickupAreaRightLowerCorner.position) / 2;
     }
 }

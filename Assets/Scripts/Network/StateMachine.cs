@@ -4,6 +4,8 @@ using System.Linq;
 using MLAPI;
 using MLAPI.Messaging;
 using UnityEngine;
+using Random = UnityEngine.Random;
+
 public enum ServerModeType
 {
     Waiting,
@@ -103,7 +105,7 @@ public class WaitingMode : ServerMode
             to(ServerModeType.StartRound);
         }
 
-        ServerEventManager.TriggerEvent(ServerEventName.WaitingForPlayers);
+        EventManager.Trigger(new WaitingForPlayersEvent());
         // GameCanvasManager.Singleton.InvokeServerRpc(GameCanvasManager.Singleton.TEST);
         //GameCanvasManager.Singleton.InvokeClientRpcOnEveryone(GameCanvasManager.Singleton.TriggerGameStateText, true, "Bunda");
     }
@@ -135,11 +137,11 @@ public class StartRoundMode : ServerMode
     public IEnumerator<WaitForSeconds> CountDownRoutine()
     {
         yield return new WaitForSeconds(0.1f);
-        ServerEventManager.TriggerEvent(ServerEventName.RoundStarting(3));
+        EventManager.Trigger(new RoundStartingEvent(3));
         yield return new WaitForSeconds(1);
-        ServerEventManager.TriggerEvent(ServerEventName.RoundStarting(2));
+        EventManager.Trigger(new RoundStartingEvent(2));
         yield return new WaitForSeconds(1);
-        ServerEventManager.TriggerEvent(ServerEventName.RoundStarting(1));
+        EventManager.Trigger(new RoundStartingEvent(1));
         yield return new WaitForSeconds(1);
 
         to(ServerModeType.Round);
@@ -161,26 +163,45 @@ public class RoundMode : ServerMode
 
         var clients = NetworkingManager.Singleton.ConnectedClientsList;
 
+        // Unlock clients
         foreach (var client in clients)
         {
             connectors.Add(client.PlayerObject.GetComponent<PlayerConnector>());
             connectors.Last().SetLocked(false);
+            connectors.Last().Heal();
         }
 
-        ServerEventManager.TriggerEvent(ServerEventName.RoundStarted);
+        // Starts snowball spawning
+        GameCanvasManager.Singleton.StartCoroutine(SpawnPickups());
 
+        EventManager.Trigger(new RoundStartedEvent());
     }
 
     public override void OnExitState()
     {
+        GameCanvasManager.Singleton.StopCoroutine(SpawnPickups());
 
+        for (int i = 0; i < connectors.Count; i++)
+        {
+            connectors[i].SetLocked(false);
+            connectors[i].Heal();
+            connectors[i].transform.position = EnviromentManager.Singleton.GetSpawnPosition(i);
+        }
+
+        connectors.Clear();
     }
 
-    public IEnumerator<WaitForSeconds> CountDownRoutine()
+    public IEnumerator<WaitForSeconds> SpawnPickups()
     {
-        yield return new WaitForSeconds(2f);
-        ServerEventManager.TriggerEvent(ServerEventName.RoundStarted);
-        GameCanvasManager.Singleton.TriggerGameStateText(true, "GO!");
+        GameSpawnManager.SpawnPickup(EnviromentManager.Singleton.GetPickupSpawnCenterPosition());
 
+        while (true)
+        {
+            yield return new WaitForSeconds(Random.Range(0.5f, 1.5f));
+
+            GameSpawnManager.SpawnPickup(EnviromentManager.Singleton.GetPickupSpawnPosition());
+
+            yield return null;
+        }
     }
 }

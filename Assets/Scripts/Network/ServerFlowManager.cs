@@ -1,29 +1,76 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using MLAPI;
+using MLAPI.Spawning;
 
 public class ServerFlowManager : MonoBehaviour
 {
     private void Awake()
     {
-        ServerEventManager.Listen(ServerEventName.WaitingForPlayers, WaitingForPlayersHandler);
-        ServerEventManager.Listen(ServerEventName.RoundStarting(3), () => RoundStartingHandler(3));
-        ServerEventManager.Listen(ServerEventName.RoundStarting(2), () => RoundStartingHandler(2));
-        ServerEventManager.Listen(ServerEventName.RoundStarting(1), () => RoundStartingHandler(1));
-        ServerEventManager.Listen(ServerEventName.RoundStarted, RoundStarted);
+        // server rules
+        EventManager.Listen<WaitingForPlayersEvent>(WaitingForPlayersHandler);
+        EventManager.Listen<RoundStartingEvent>(RoundStartingHandler);
+        EventManager.Listen<RoundStartedEvent>(RoundStartedHandler);
+
+        // gameplay rules
+        EventManager.Listen<BulletTriggerEvent>(BulletTriggerHandler);
+        EventManager.Listen<AmmoTriggerEvent>(AmmoTriggerHandler);
+        EventManager.Listen<DeathEvent>(DeathEventHandler);
     }
 
-    private void WaitingForPlayersHandler()
+    void BulletTriggerHandler (BulletTriggerEvent e)
+    {
+        if(e.Collider.tag == "Wall")
+        {
+            Destroy(e.Bullet.gameObject);
+        }
+
+        if (e.Collider.tag == "Player")
+        {
+            PlayerConnector connector = e.Collider.GetPlayerConnector();
+            if (connector != null)
+            {
+                connector.Damage(e.Bullet.Damage);
+            }
+
+            Destroy(e.Bullet.gameObject);
+        }
+    }
+
+    void AmmoTriggerHandler(AmmoTriggerEvent e)
+    {
+        if (e.Collider.tag == "Player")
+        {
+            var netObject = e.Collider.GetComponent<NetworkedObject>();
+
+            if(netObject != null)
+            {
+                var p = SpawnManager.GetPlayerObject(netObject.OwnerClientId);
+
+                p.GetComponent<PlayerConnector>().AddAmmo(e.Ammo.Amount);
+
+                Destroy(e.Ammo.gameObject);
+            }
+        }
+    }
+
+    void DeathEventHandler(DeathEvent e)
+    {
+
+    }
+
+    private void WaitingForPlayersHandler(WaitingForPlayersEvent e)
     {
         GameCanvasManager.Singleton.InvokeClientRpcOnEveryone(GameCanvasManager.Singleton.TriggerGameStateText, true, GameStateMessages.Waiting());
     }
 
-    private void RoundStartingHandler(int time)
+    private void RoundStartingHandler(RoundStartingEvent e)
     {
-        GameCanvasManager.Singleton.InvokeClientRpcOnEveryone(GameCanvasManager.Singleton.TriggerGameStateText, true, time.ToString());
+        GameCanvasManager.Singleton.InvokeClientRpcOnEveryone(GameCanvasManager.Singleton.TriggerGameStateText, true, e.Time.ToString());
     }
 
-    private void RoundStarted()
+    private void RoundStartedHandler(RoundStartedEvent e)
     {
         StartCoroutine(GoRoutine());
     }
