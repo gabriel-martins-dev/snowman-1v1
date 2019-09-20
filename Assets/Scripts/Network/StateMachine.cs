@@ -5,6 +5,7 @@ using MLAPI;
 using MLAPI.Messaging;
 using UnityEngine;
 using Random = UnityEngine.Random;
+using DG.Tweening;
 
 public enum ServerModeType
 {
@@ -125,25 +126,21 @@ public class StartRoundMode : ServerMode
 
     public override void OnEnterState()
     {
-        GameCanvasManager.Singleton.StartCoroutine(CountDownRoutine());
+        Sequence countDownSequence = DOTween.Sequence();
+        countDownSequence
+            .AppendInterval(0.1f)
+            .AppendCallback(() => EventManager.Trigger(new RoundStartingEvent(3)))
+            .AppendInterval(1f)
+            .AppendCallback(() => EventManager.Trigger(new RoundStartingEvent(2)))
+            .AppendInterval(1f)
+            .AppendCallback(() => EventManager.Trigger(new RoundStartingEvent(1)))
+            .AppendInterval(1f)
+            .AppendCallback(() => to(ServerModeType.Round));
     }
 
     public override void OnExitState()
     {
 
-    }
-
-    public IEnumerator<WaitForSeconds> CountDownRoutine()
-    {
-        yield return new WaitForSeconds(0.1f);
-        EventManager.Trigger(new RoundStartingEvent(3));
-        yield return new WaitForSeconds(1);
-        EventManager.Trigger(new RoundStartingEvent(2));
-        yield return new WaitForSeconds(1);
-        EventManager.Trigger(new RoundStartingEvent(1));
-        yield return new WaitForSeconds(1);
-
-        to(ServerModeType.Round);
     }
 }
 
@@ -157,10 +154,15 @@ public class RoundMode : ServerMode
     private List<PlayerConnector> connectors;
     private bool stopSpawning;
     private int redTeam, blueTeam = 0;
+    private Sequence spawnSequence;
 
     public RoundMode(Action<ServerModeType> to) : base(to)
     {
-
+        spawnSequence = DOTween.Sequence()
+            .AppendInterval(Random.Range(0.5f, 1.5f))
+            .AppendCallback(() => GameSpawnManager.SpawnPickup(EnviromentManager.Singleton.GetPickupSpawnPosition()))
+            .SetLoops(-1);
+        spawnSequence.Pause();
     }
 
     public override void OnEnterState()
@@ -182,7 +184,7 @@ public class RoundMode : ServerMode
         }
 
         // Starts snowball spawning
-        GameCanvasManager.Singleton.StartCoroutine(SpawnPickups());
+        spawnSequence.Restart();
 
         EventManager.Trigger(new RoundStartedEvent());
     }
@@ -204,6 +206,8 @@ public class RoundMode : ServerMode
     void DeathEventHandler(DeathEvent e)
     {
         stopSpawning = true;
+
+        spawnSequence.Pause();
 
         string winner = string.Empty;
 
@@ -238,22 +242,6 @@ public class RoundMode : ServerMode
             to(ServerModeType.StartRound);
         }
     }
-
-    public IEnumerator<WaitForSeconds> SpawnPickups()
-    {
-        GameSpawnManager.SpawnPickup(EnviromentManager.Singleton.GetPickupSpawnCenterPosition());
-
-        while (true)
-        {
-            yield return new WaitForSeconds(Random.Range(0.5f, 1.5f));
-
-            if (stopSpawning) break;
-
-            GameSpawnManager.SpawnPickup(EnviromentManager.Singleton.GetPickupSpawnPosition());
-
-            yield return null;
-        }
-    }
 }
 
 public class EndGameMode : ServerMode
@@ -265,22 +253,15 @@ public class EndGameMode : ServerMode
 
     public override void OnEnterState()
     {
-        GameCanvasManager.Singleton.StartCoroutine(KillGame());
+        DOTween.Sequence()
+            .AppendInterval(4f)
+            .AppendCallback(() => NetworkingManager.Singleton.StopServer())
+            .AppendCallback(() => EventManager.Trigger(new RestartEvent()))
+            .AppendCallback(() => UnityEngine.SceneManagement.SceneManager.LoadScene(0));
     }
 
     public override void OnExitState()
     {
 
-    }
-
-    public IEnumerator<WaitForSeconds> KillGame()
-    {
-        yield return new WaitForSeconds(4f);
-
-        NetworkingManager.Singleton.StopServer();
-
-        EventManager.Trigger(new RestartEvent());
-
-        UnityEngine.SceneManagement.SceneManager.LoadScene(0);
     }
 }

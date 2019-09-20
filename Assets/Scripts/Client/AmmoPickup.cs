@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using MLAPI;
+using DG.Tweening;
 
 public class AmmoPickup : NetworkedBehaviour
 {
@@ -9,23 +10,8 @@ public class AmmoPickup : NetworkedBehaviour
 
     private void Start()
     {
-        StartCoroutine(Grow());
-    }
-
-    public IEnumerator Grow()
-    {
-        float time = Time.time + 1;
-        float scale = 0.1f;
-
-        while (scale < 1f)
-        {
-            scale += 5f * Time.deltaTime;
-            transform.localScale = Vector3.one * scale;
-
-            yield return null;
-        }
-
-        transform.localScale = Vector3.one;
+        transform.localScale = Vector3.one * 0.1f;
+        transform.DOScale(1f, 0.5f);
     }
 
     private void OnTriggerEnter2D(Collider2D collision)

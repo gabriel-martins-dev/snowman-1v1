@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using MLAPI;
 using MLAPI.Spawning;
+using DG.Tweening;
 
 public class ServerFlowManager : MonoBehaviour
 {
@@ -19,9 +20,9 @@ public class ServerFlowManager : MonoBehaviour
         EventManager.Listen<AmmoTriggerEvent>(AmmoTriggerHandler);
     }
 
-    void BulletTriggerHandler (BulletTriggerEvent e)
+    void BulletTriggerHandler(BulletTriggerEvent e)
     {
-        if(e.Collider.tag == "Wall")
+        if (e.Collider.tag == "Wall")
         {
             Destroy(e.Bullet.gameObject);
         }
@@ -44,7 +45,7 @@ public class ServerFlowManager : MonoBehaviour
         {
             var netObject = e.Collider.GetComponent<NetworkedObject>();
 
-            if(netObject != null)
+            if (netObject != null)
             {
                 var p = SpawnManager.GetPlayerObject(netObject.OwnerClientId);
 
@@ -67,20 +68,14 @@ public class ServerFlowManager : MonoBehaviour
 
     private void RoundStartedHandler(RoundStartedEvent e)
     {
-        StartCoroutine(GoRoutine());
+        DOTween.Sequence()
+            .AppendCallback(() => GameCanvasManager.Singleton.InvokeClientRpcOnEveryone(GameCanvasManager.Singleton.TriggerGameStateText, true, "GO!"))
+            .AppendInterval(1f)
+            .AppendCallback(() => GameCanvasManager.Singleton.InvokeClientRpcOnEveryone(GameCanvasManager.Singleton.TriggerGameStateText, false, ""));
     }
 
     private void GameEndedEventHandler(GameEndedEvent e)
     {
         GameCanvasManager.Singleton.InvokeClientRpcOnEveryone(GameCanvasManager.Singleton.TriggerGameStateText, true, "Winner is " + e.Winner);
-    }
-
-    public IEnumerator<WaitForSeconds> GoRoutine()
-    {
-        GameCanvasManager.Singleton.InvokeClientRpcOnEveryone(GameCanvasManager.Singleton.TriggerGameStateText, true, "GO!");
-
-        yield return new WaitForSeconds(1);
-
-        GameCanvasManager.Singleton.InvokeClientRpcOnEveryone(GameCanvasManager.Singleton.TriggerGameStateText, false, "");
     }
 }
