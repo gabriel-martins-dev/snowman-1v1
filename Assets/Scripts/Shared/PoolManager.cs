@@ -7,23 +7,30 @@ using MLAPI;
 using MLAPI.Spawning;
 using MLAPI.Messaging;
 
+[Serializable]
+public class Pool
+{
+    List<MonoBehaviour> active;
+    List<MonoBehaviour> inactive;
+}
 
-public class GameSpawnManager : NetworkedBehaviour
+
+public class PoolManager : NetworkedBehaviour
 {
     [SerializeField] BulletComponent bulletPrefab;
     [SerializeField] AmmoPickup pickupPrefab;
 
     public List<object> pool;
 
-    private static GameSpawnManager singleton;
+    private static PoolManager singleton;
 
-    public static GameSpawnManager Singleton
+    public static PoolManager Singleton
     {
         get
         {
             if (!singleton)
             {
-                singleton = FindObjectOfType(typeof(GameSpawnManager)) as GameSpawnManager;
+                singleton = FindObjectOfType(typeof(PoolManager)) as PoolManager;
 
                 if (!singleton)
                 {

@@ -147,7 +147,7 @@ public class RoundMode : ServerMode
     {
         spawnSequence = DOTween.Sequence()
             .AppendInterval(Random.Range(0.5f, 1.5f))
-            .AppendCallback(() => GameSpawnManager.SpawnPickup(EnviromentManager.Singleton.GetPickupSpawnPosition()))
+            .AppendCallback(() => PoolManager.SpawnPickup(EnviromentManager.Singleton.GetPickupSpawnPosition()))
             .SetLoops(-1);
         spawnSequence.Pause();
     }

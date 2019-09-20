@@ -26,7 +26,7 @@ public class PlayerWeaponComponent : NetworkedBehaviour
             Vector3 rotation = new Vector3(0,0, angleRad * Mathf.Rad2Deg);
             aim.rotation = Quaternion.Euler(rotation);
 
-            GameSpawnManager.SpawnBullet(
+            PoolManager.SpawnBullet(
                 this,
                 pointer.position, rotation);
         }
