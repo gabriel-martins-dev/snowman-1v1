@@ -9,7 +9,6 @@ public class PlayerMovementComponent : BasePlayerComponent
     [SerializeField] PlayerInputComponent input;
     readonly float speed = 5;
 
-    // Update is called once per frame
     void Update()
     {
         if (locked.Value) return;

@@ -42,8 +42,6 @@ public class EventManager : MonoBehaviour
 
     public static void Listen<T>(EventDelegate<T> del) where T : GameEvent
     {
-        Debug.Log("Listen on " + typeof(T));
-
         if (Singleton.delegates.ContainsKey(typeof(T)))
         {
             Delegate tempDel = Singleton.delegates[typeof(T)];
@@ -75,8 +73,6 @@ public class EventManager : MonoBehaviour
 
     public static void Trigger(GameEvent gameEvent)
     {
-        Debug.Log("Trigger on " + gameEvent.GetType());
-
         if (Singleton.delegates.ContainsKey(gameEvent.GetType()))
         {
             Singleton.delegates[gameEvent.GetType()].DynamicInvoke(gameEvent);

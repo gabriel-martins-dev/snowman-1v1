@@ -14,6 +14,17 @@ public static class GameStateMessages
     {
         return "Waiting for players";
     }
+
+    public static string Go()
+    {
+        return "GO!";
+    }
+
+    public static string Winner(string text)
+    {
+        return "Winner is " + text;
+    }
+
 }
 
 public class GameCanvasManager : NetworkedBehaviour

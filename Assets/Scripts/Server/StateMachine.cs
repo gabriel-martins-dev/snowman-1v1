@@ -12,7 +12,6 @@ public enum ServerModeType
     Waiting,
     StartRound,
     Round,
-    EndRound,
     EndGame
 }
 
@@ -66,8 +65,6 @@ public class WaitingMode : ServerMode
 
         NetworkingManager.Singleton.OnServerStarted += ServerStartedHandler;
         NetworkingManager.Singleton.OnClientConnectedCallback += ClientConnectedHandler;
-
-
     }
 
     public override void OnExitState()
@@ -80,8 +77,6 @@ public class WaitingMode : ServerMode
 
     private void ServerStartedHandler()
     {
-        Debug.Log("Server Started");
-
         var clients = NetworkingManager.Singleton.ConnectedClientsList;
 
         if (clients.Count > 0)
@@ -95,8 +90,6 @@ public class WaitingMode : ServerMode
 
     private void ClientConnectedHandler(ulong client)
     {
-        Debug.Log("Client Connected");
-
         connectors.Add(
             NetworkingManager.Singleton.ConnectedClients[client]
             .PlayerObject.GetComponent<PlayerConnector>());
@@ -146,15 +139,9 @@ public class StartRoundMode : ServerMode
 
 public class RoundMode : ServerMode
 {
-    private class Team
-    {
-        public int Score;
-    }
-
     private List<PlayerConnector> connectors;
-    private bool stopSpawning;
-    private int redTeam, blueTeam = 0;
     private Sequence spawnSequence;
+    private int redTeam, blueTeam = 0;
 
     public RoundMode(Action<ServerModeType> to) : base(to)
     {
@@ -168,7 +155,6 @@ public class RoundMode : ServerMode
     public override void OnEnterState()
     {
         EventManager.Listen<DeathEvent>(DeathEventHandler);
-        stopSpawning = false;
         connectors = new List<PlayerConnector>();
 
         var clients = NetworkingManager.Singleton.ConnectedClientsList;
@@ -179,8 +165,6 @@ public class RoundMode : ServerMode
             connectors.Add(client.PlayerObject.GetComponent<PlayerConnector>());
             connectors.Last().SetLocked(false);
             connectors.Last().ResetComponents();
-            //connectors.Last().InvokeClientRpcOnEveryone(connectors.Last().Teleport, EnviromentManager.Singleton.GetSpawnPosition(connectors.Count - 1));
-            //connectors.Last().transform.position = EnviromentManager.Singleton.GetSpawnPosition(connectors.Count-1);
         }
 
         // Starts snowball spawning
@@ -205,8 +189,6 @@ public class RoundMode : ServerMode
 
     void DeathEventHandler(DeathEvent e)
     {
-        stopSpawning = true;
-
         spawnSequence.Pause();
 
         string winner = string.Empty;

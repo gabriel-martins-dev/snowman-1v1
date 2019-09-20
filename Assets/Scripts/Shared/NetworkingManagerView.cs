@@ -28,10 +28,11 @@ public class NetworkingManagerView : MonoBehaviour
             onStartClient?.Invoke();
         }
 
-        if (GUI.Button(new Rect(20, 70, 100, 20), "Start server"))
-        {
-            onStartServer?.Invoke();
-        }
+        // Disasbled
+        //if (GUI.Button(new Rect(20, 70, 100, 20), "Start server"))
+        //{
+        //    onStartServer?.Invoke();
+        //}
 
         if (GUI.Button(new Rect(20, 120, 100, 20), "Start host"))
         {

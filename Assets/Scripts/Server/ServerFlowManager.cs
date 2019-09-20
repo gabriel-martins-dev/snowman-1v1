@@ -69,13 +69,14 @@ public class ServerFlowManager : MonoBehaviour
     private void RoundStartedHandler(RoundStartedEvent e)
     {
         DOTween.Sequence()
-            .AppendCallback(() => GameCanvasManager.Singleton.InvokeClientRpcOnEveryone(GameCanvasManager.Singleton.TriggerGameStateText, true, "GO!"))
+            .AppendCallback(() => GameCanvasManager.Singleton.InvokeClientRpcOnEveryone(GameCanvasManager.Singleton.TriggerGameStateText, true, GameStateMessages.Go()))
             .AppendInterval(1f)
             .AppendCallback(() => GameCanvasManager.Singleton.InvokeClientRpcOnEveryone(GameCanvasManager.Singleton.TriggerGameStateText, false, ""));
     }
 
     private void GameEndedEventHandler(GameEndedEvent e)
     {
-        GameCanvasManager.Singleton.InvokeClientRpcOnEveryone(GameCanvasManager.Singleton.TriggerGameStateText, true, "Winner is " + e.Winner);
+        GameCanvasManager.Singleton.InvokeClientRpcOnEveryone(
+            GameCanvasManager.Singleton.TriggerGameStateText, true, GameStateMessages.Winner(e.Winner));
     }
 }
