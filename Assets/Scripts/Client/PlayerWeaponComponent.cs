@@ -7,6 +7,8 @@ using MLAPI.Spawning;
 public class PlayerWeaponComponent : NetworkedBehaviour
 {
     [SerializeField] PlayerInputComponent input;
+    [SerializeField] Transform aim;
+    [SerializeField] Transform pointer;
 
     private NetworkedVar<float> ammoAmount = new NetworkedVar<float>(0);
 
@@ -22,10 +24,11 @@ public class PlayerWeaponComponent : NetworkedBehaviour
             Vector3 direction = Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position;
             float angleRad = Mathf.Atan2(direction.y, direction.x);
             Vector3 rotation = new Vector3(0,0, angleRad * Mathf.Rad2Deg);
+            aim.rotation = Quaternion.Euler(rotation);
 
             GameSpawnManager.SpawnBullet(
                 this,
-                transform.position + (direction.normalized * 2), rotation);
+                pointer.position, rotation);
         }
     }
 

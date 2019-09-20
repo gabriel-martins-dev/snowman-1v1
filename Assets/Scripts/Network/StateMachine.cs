@@ -112,7 +112,7 @@ public class WaitingMode : ServerMode
     private bool HasAllPlayers()
     {
         // value should come from a setting, not hard codded
-        return NetworkingManager.Singleton.ConnectedClientsList.Count >= 2;
+        return NetworkingManager.Singleton.ConnectedClientsList.Count >= 1;
     }
 }
 
