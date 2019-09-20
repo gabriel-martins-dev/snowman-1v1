@@ -7,19 +7,9 @@ using MLAPI;
 using MLAPI.Spawning;
 using MLAPI.Messaging;
 
-[Serializable]
-public class Pool
-{
-    [SerializeField] public NetworkedObject pickupPrefab;
-
-    List<NetworkedObject> active;
-    List<NetworkedObject> inactive;
-}
-
 
 public class PoolManager : NetworkedBehaviour
 {
-    [SerializeField] List<Pool> pools;
     [SerializeField] BulletComponent bulletPrefab;
     [SerializeField] AmmoPickup pickupPrefab;
 
