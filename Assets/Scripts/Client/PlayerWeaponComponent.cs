@@ -12,7 +12,7 @@ public class PlayerWeaponComponent : NetworkedBehaviour
 
     private void Update()
     {
-        if (input.fire) Fire();
+        if (input.Fire) Fire();
     }
 
     private void Fire()
@@ -42,5 +42,10 @@ public class PlayerWeaponComponent : NetworkedBehaviour
     public void SpentAmmo()
     {
         ammoAmount.Value--;
+    }
+
+    public void ResetAmmo()
+    {
+        ammoAmount.Value = 0f;
     }
 }

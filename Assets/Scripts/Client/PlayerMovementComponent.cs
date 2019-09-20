@@ -1,19 +1,23 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using MLAPI;
+using MLAPI.NetworkedVar;
 
-public class PlayerMovementComponent : MonoBehaviour
+public class PlayerMovementComponent : BasePlayerComponent
 {
     [SerializeField] PlayerInputComponent input;
-    [SerializeField] float speed;
+    readonly float speed = 5;
 
     // Update is called once per frame
     void Update()
     {
+        if (locked.Value) return;
+
         Vector2 moveDirection = Vector2.zero;
 
-        float vertical = input.verticalMovement;
-        float horizontal = input.horizontalMovement;
+        float vertical = input.VerticalMovement;
+        float horizontal = input.HorizontalMovement;
 
         if (horizontal > 0)
         {

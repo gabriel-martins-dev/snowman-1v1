@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿using System;
+using System.Linq;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using MLAPI;
@@ -10,6 +12,8 @@ public class GameSpawnManager : NetworkedBehaviour
 {
     [SerializeField] BulletComponent bulletPrefab;
     [SerializeField] AmmoPickup pickupPrefab;
+
+    public List<object> pool;
 
     private static GameSpawnManager singleton;
 
@@ -37,7 +41,16 @@ public class GameSpawnManager : NetworkedBehaviour
 
     void Initialize()
     {
+        pool = new List<object>();
+    }
 
+    private T Get<T>() where T : UnityEngine.Object
+    {
+        var item = pool.Find(obj => obj.GetType() == typeof(T));
+
+        if (item != null) pool.Remove(item);
+
+        return (T) item;
     }
 
     public static void SpawnBullet(PlayerWeaponComponent weapon,Vector3 position, Vector3 rotation)
@@ -47,8 +60,29 @@ public class GameSpawnManager : NetworkedBehaviour
 
     public static void SpawnPickup(Vector3 position)
     {
-        Instantiate(Singleton.pickupPrefab, position, Quaternion.identity)
-            .GetComponent<NetworkedObject>().Spawn();
+        var pickup = Singleton.Get<AmmoPickup>();
+
+        if(pickup == null)
+        {
+            pickup = Instantiate(Singleton.pickupPrefab, position, Quaternion.identity);
+            pickup.GetComponent<NetworkedObject>().Spawn();
+        }
+        else
+        {
+            pickup.transform.position = position;
+            pickup.gameObject.SetActive(true);
+        }
+    }
+
+    public void Despawn<T>(T obj) where T : MonoBehaviour
+    {
+        pool.Add(obj);
+        obj.gameObject.SetActive(false);
+    }
+
+    public void DespawnAll<T>()
+    {
+ 
     }
 
     [ServerRPC(RequireOwnership = false)]

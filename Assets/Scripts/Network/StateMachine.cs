@@ -26,6 +26,7 @@ public class ServerStateMachine
         states.Add(ServerModeType.Waiting, new WaitingMode(ChangeState));
         states.Add(ServerModeType.StartRound, new StartRoundMode(ChangeState));
         states.Add(ServerModeType.Round, new RoundMode(ChangeState));
+        states.Add(ServerModeType.EndGame, new EndGameMode(ChangeState));
     }
 
     public void ChangeState(ServerModeType state)
@@ -106,8 +107,6 @@ public class WaitingMode : ServerMode
         }
 
         EventManager.Trigger(new WaitingForPlayersEvent());
-        // GameCanvasManager.Singleton.InvokeServerRpc(GameCanvasManager.Singleton.TEST);
-        //GameCanvasManager.Singleton.InvokeClientRpcOnEveryone(GameCanvasManager.Singleton.TriggerGameStateText, true, "Bunda");
     }
 
     private bool HasAllPlayers()
@@ -150,7 +149,14 @@ public class StartRoundMode : ServerMode
 
 public class RoundMode : ServerMode
 {
+    private class Team
+    {
+        public int Score;
+    }
+
     private List<PlayerConnector> connectors;
+    private bool stopSpawning;
+    private int redTeam, blueTeam = 0;
 
     public RoundMode(Action<ServerModeType> to) : base(to)
     {
@@ -159,6 +165,8 @@ public class RoundMode : ServerMode
 
     public override void OnEnterState()
     {
+        EventManager.Listen<DeathEvent>(DeathEventHandler);
+        stopSpawning = false;
         connectors = new List<PlayerConnector>();
 
         var clients = NetworkingManager.Singleton.ConnectedClientsList;
@@ -168,7 +176,9 @@ public class RoundMode : ServerMode
         {
             connectors.Add(client.PlayerObject.GetComponent<PlayerConnector>());
             connectors.Last().SetLocked(false);
-            connectors.Last().Heal();
+            connectors.Last().ResetComponents();
+            //connectors.Last().InvokeClientRpcOnEveryone(connectors.Last().Teleport, EnviromentManager.Singleton.GetSpawnPosition(connectors.Count - 1));
+            //connectors.Last().transform.position = EnviromentManager.Singleton.GetSpawnPosition(connectors.Count-1);
         }
 
         // Starts snowball spawning
@@ -179,16 +189,54 @@ public class RoundMode : ServerMode
 
     public override void OnExitState()
     {
-        GameCanvasManager.Singleton.StopCoroutine(SpawnPickups());
+        EventManager.Clear<DeathEvent>(DeathEventHandler);
 
         for (int i = 0; i < connectors.Count; i++)
         {
-            connectors[i].SetLocked(false);
-            connectors[i].Heal();
-            connectors[i].transform.position = EnviromentManager.Singleton.GetSpawnPosition(i);
+            connectors[i].SetLocked(true);
+            connectors[i].ResetComponents();
+            connectors[i].InvokeClientRpcOnEveryone(connectors[i].Teleport, EnviromentManager.Singleton.GetSpawnPosition(i));
         }
 
         connectors.Clear();
+    }
+
+    void DeathEventHandler(DeathEvent e)
+    {
+        stopSpawning = true;
+
+        string winner = string.Empty;
+
+        for (int i = 0; i < connectors.Count; i++)
+        {
+            if(connectors[i].OwnerClientId == e.ClientId)
+            {
+                if (i < 1)
+                {
+                    redTeam++;
+                }
+                else
+                {
+                    blueTeam++;
+                }
+
+                if(redTeam > 1 || blueTeam > 1)
+                {
+                    winner = (redTeam > blueTeam ? "Red" : "Blue") + " Player";
+                }
+                break;
+            }
+        }
+
+        if(!string.IsNullOrEmpty(winner))
+        {
+            EventManager.Trigger(new GameEndedEvent(winner));
+            to(ServerModeType.EndGame);
+        }
+        else
+        {
+            to(ServerModeType.StartRound);
+        }
     }
 
     public IEnumerator<WaitForSeconds> SpawnPickups()
@@ -199,9 +247,40 @@ public class RoundMode : ServerMode
         {
             yield return new WaitForSeconds(Random.Range(0.5f, 1.5f));
 
+            if (stopSpawning) break;
+
             GameSpawnManager.SpawnPickup(EnviromentManager.Singleton.GetPickupSpawnPosition());
 
             yield return null;
         }
+    }
+}
+
+public class EndGameMode : ServerMode
+{
+    public EndGameMode(Action<ServerModeType> to) : base(to)
+    {
+
+    }
+
+    public override void OnEnterState()
+    {
+        GameCanvasManager.Singleton.StartCoroutine(KillGame());
+    }
+
+    public override void OnExitState()
+    {
+
+    }
+
+    public IEnumerator<WaitForSeconds> KillGame()
+    {
+        yield return new WaitForSeconds(4f);
+
+        NetworkingManager.Singleton.StopServer();
+
+        EventManager.Trigger(new RestartEvent());
+
+        UnityEngine.SceneManagement.SceneManager.LoadScene(0);
     }
 }

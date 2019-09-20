@@ -516,7 +516,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   input: {fileID: 8364904659605790353}
-  speed: 5
 --- !u!114 &8364904659605790353
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -544,6 +543,7 @@ MonoBehaviour:
   input: {fileID: 8364904659605790353}
   weapon: {fileID: 1706615761988834326}
   health: {fileID: 3169172027172582998}
+  movement: {fileID: 1072957986008387189}
 --- !u!114 &3169172027172582998
 MonoBehaviour:
   m_ObjectHideFlags: 0

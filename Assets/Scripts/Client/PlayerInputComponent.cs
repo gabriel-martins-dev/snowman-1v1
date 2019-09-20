@@ -2,33 +2,26 @@
 using MLAPI.NetworkedVar;
 using UnityEngine;
 
-public class PlayerInputComponent : NetworkedBehaviour
+public class PlayerInputComponent : BasePlayerComponent
 {
-    public float verticalMovement { get; private set; }
-    public float horizontalMovement { get; private set; }
-    public bool fire { get; private set; }
-
-    private NetworkedVar<bool> locked = new NetworkedVar<bool>(false);
+    public float VerticalMovement { get; private set; }
+    public float HorizontalMovement { get; private set; }
+    public bool Fire { get; private set; }
 
     void Update()
     {
         if (locked.Value) return;
 
-        verticalMovement = IsLocalPlayer
+        VerticalMovement = IsLocalPlayer
             ? Input.GetAxis("Vertical")
             : 0;
 
-        horizontalMovement = IsLocalPlayer
+        HorizontalMovement = IsLocalPlayer
             ? Input.GetAxis("Horizontal")
             : 0;
 
-        fire = IsLocalPlayer 
+        Fire = IsLocalPlayer 
             ? Input.GetButtonDown("Fire1")
             : false;
-    }
-
-    public void SetLock(bool value)
-    {
-        locked.Value = value;
     }
 }

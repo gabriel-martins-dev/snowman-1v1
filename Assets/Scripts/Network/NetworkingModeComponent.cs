@@ -4,13 +4,15 @@ using UnityEngine;
 public class NetworkingModeComponent : MonoBehaviour
 {
     [SerializeField] NetworkingManagerView view;
-    [SerializeField] NetworkingServer server;
+    [SerializeField] NetworkingServer serverPrefab;
 
     void Start()
     {
         view.onStartClient += StartClient;
         view.onStartServer += StartServer;
         view.onStartHost += StartHost;
+
+        EventManager.Listen<RestartEvent>(Restart);
     }
 
     void StartClient()
@@ -33,6 +35,11 @@ public class NetworkingModeComponent : MonoBehaviour
 
     void SetupServer(bool isHost)
     {
-        Instantiate(server).GetComponent<NetworkingServer>().Initialize(isHost);
+        Instantiate(serverPrefab).GetComponent<NetworkingServer>().Initialize(isHost);
+    }
+
+    void Restart(RestartEvent e)
+    {
+        view.Show();
     }
 }

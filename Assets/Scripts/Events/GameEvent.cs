@@ -26,6 +26,21 @@ public class RoundStartedEvent : GameEvent
 
 }
 
+public class GameEndedEvent : GameEvent
+{
+    public string Winner { get; private set; }
+
+    public GameEndedEvent(string winner)
+    {
+        Winner = winner;
+    }
+}
+
+public class RestartEvent : GameEvent
+{
+
+}
+
 public class TriggerEvent : GameEvent
 {
     public Collider2D Collider { get; private set; }

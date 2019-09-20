@@ -12,11 +12,11 @@ public class ServerFlowManager : MonoBehaviour
         EventManager.Listen<WaitingForPlayersEvent>(WaitingForPlayersHandler);
         EventManager.Listen<RoundStartingEvent>(RoundStartingHandler);
         EventManager.Listen<RoundStartedEvent>(RoundStartedHandler);
+        EventManager.Listen<GameEndedEvent>(GameEndedEventHandler);
 
         // gameplay rules
         EventManager.Listen<BulletTriggerEvent>(BulletTriggerHandler);
         EventManager.Listen<AmmoTriggerEvent>(AmmoTriggerHandler);
-        EventManager.Listen<DeathEvent>(DeathEventHandler);
     }
 
     void BulletTriggerHandler (BulletTriggerEvent e)
@@ -55,11 +55,6 @@ public class ServerFlowManager : MonoBehaviour
         }
     }
 
-    void DeathEventHandler(DeathEvent e)
-    {
-
-    }
-
     private void WaitingForPlayersHandler(WaitingForPlayersEvent e)
     {
         GameCanvasManager.Singleton.InvokeClientRpcOnEveryone(GameCanvasManager.Singleton.TriggerGameStateText, true, GameStateMessages.Waiting());
@@ -73,6 +68,11 @@ public class ServerFlowManager : MonoBehaviour
     private void RoundStartedHandler(RoundStartedEvent e)
     {
         StartCoroutine(GoRoutine());
+    }
+
+    private void GameEndedEventHandler(GameEndedEvent e)
+    {
+        GameCanvasManager.Singleton.InvokeClientRpcOnEveryone(GameCanvasManager.Singleton.TriggerGameStateText, true, "Winner is " + e.Winner);
     }
 
     public IEnumerator<WaitForSeconds> GoRoutine()
