@@ -106,7 +106,7 @@ public class WaitingMode : ServerMode
     private bool HasAllPlayers()
     {
         // value should come from a setting, not hard codded
-        return NetworkingManager.Singleton.ConnectedClientsList.Count >= 1;
+        return NetworkingManager.Singleton.ConnectedClientsList.Count >= 2;
     }
 }
 
@@ -119,6 +119,8 @@ public class StartRoundMode : ServerMode
 
     public override void OnEnterState()
     {
+        PoolManager.Singleton.PullAll();
+
         Sequence countDownSequence = DOTween.Sequence();
         countDownSequence
             .AppendInterval(0.1f)
@@ -206,7 +208,7 @@ public class RoundMode : ServerMode
                     blueTeam++;
                 }
 
-                if(redTeam > 1 || blueTeam > 1)
+                if(redTeam > 2 || blueTeam > 2)
                 {
                     winner = (redTeam > blueTeam ? "Red" : "Blue") + " Player";
                 }
@@ -235,6 +237,8 @@ public class EndGameMode : ServerMode
 
     public override void OnEnterState()
     {
+        PoolManager.Singleton.PullAll();
+
         DOTween.Sequence()
             .AppendInterval(4f)
             .AppendCallback(() => NetworkingManager.Singleton.StopServer())

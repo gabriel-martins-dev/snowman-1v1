@@ -10,6 +10,7 @@ public class EnviromentManager : MonoBehaviour
     [SerializeField] Transform[] spawns;
     [SerializeField] Transform pickupAreaLeftUpperCorner;
     [SerializeField] Transform pickupAreaRightLowerCorner;
+    [SerializeField] Transform poolInactivePosition;
 
     public static EnviromentManager Singleton
     {
@@ -49,5 +50,10 @@ public class EnviromentManager : MonoBehaviour
     public Vector3 GetPickupSpawnCenterPosition()
     {
         return (pickupAreaLeftUpperCorner.position + pickupAreaRightLowerCorner.position) / 2;
+    }
+
+    public Vector3 GetPoolInactivePosition()
+    {
+        return poolInactivePosition.position;
     }
 }

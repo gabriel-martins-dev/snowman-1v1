@@ -10,17 +10,21 @@ using MLAPI.Messaging;
 [Serializable]
 public class Pool
 {
-    List<MonoBehaviour> active;
-    List<MonoBehaviour> inactive;
+    [SerializeField] public NetworkedObject pickupPrefab;
+
+    List<NetworkedObject> active;
+    List<NetworkedObject> inactive;
 }
 
 
 public class PoolManager : NetworkedBehaviour
 {
+    [SerializeField] List<Pool> pools;
     [SerializeField] BulletComponent bulletPrefab;
     [SerializeField] AmmoPickup pickupPrefab;
 
-    public List<object> pool;
+    public List<NetworkedBehaviour> activePool;
+    public List<NetworkedBehaviour> inactivePool;
 
     private static PoolManager singleton;
 
@@ -48,16 +52,41 @@ public class PoolManager : NetworkedBehaviour
 
     void Initialize()
     {
-        pool = new List<object>();
+        activePool = new List<NetworkedBehaviour>();
+        inactivePool = new List<NetworkedBehaviour>();
     }
 
-    private T Get<T>() where T : UnityEngine.Object
+    private T Get<T>() where T : NetworkedBehaviour
     {
-        var item = pool.Find(obj => obj.GetType() == typeof(T));
+        var item = inactivePool.Find(obj => obj.GetType() == typeof(T));
 
-        if (item != null) pool.Remove(item);
+        if (item != null)
+        {
+            inactivePool.Remove(item);
 
-        return (T) item;
+            if (!activePool.Contains(item))  activePool.Add(item);
+
+            return item.GetComponent<T>();
+        }
+
+        return null;
+    }
+
+    public T Push<T>(T obj) where T : NetworkedBehaviour
+    {
+        obj.NetworkedObject.Spawn();
+
+        if (!activePool.Contains(obj))  activePool.Add(obj);
+
+        return obj;
+    }
+
+    public void Pull<T>(T obj, bool remove = true) where T : NetworkedBehaviour
+    {
+        obj.transform.position = EnviromentManager.Singleton.GetPoolInactivePosition();
+        if(remove) activePool.Remove(obj);
+
+        if(!inactivePool.Contains(obj)) inactivePool.Add(obj);
     }
 
     public static void SpawnBullet(PlayerWeaponComponent weapon,Vector3 position, Vector3 rotation)
@@ -71,25 +100,18 @@ public class PoolManager : NetworkedBehaviour
 
         if(pickup == null)
         {
-            pickup = Instantiate(Singleton.pickupPrefab, position, Quaternion.identity);
-            pickup.GetComponent<NetworkedObject>().Spawn();
+            pickup = Singleton.Push(Instantiate(Singleton.pickupPrefab, position, Quaternion.identity));
         }
         else
         {
             pickup.transform.position = position;
-            pickup.gameObject.SetActive(true);
         }
     }
 
-    public void Despawn<T>(T obj) where T : MonoBehaviour
+    public void PullAll()
     {
-        pool.Add(obj);
-        obj.gameObject.SetActive(false);
-    }
-
-    public void DespawnAll<T>()
-    {
- 
+        activePool.ForEach(obj => Singleton.Pull(obj, false));
+        activePool.Clear();
     }
 
     [ServerRPC(RequireOwnership = false)]
@@ -99,8 +121,17 @@ public class PoolManager : NetworkedBehaviour
         {
             weapon.SpentAmmo();
 
-            Instantiate(Singleton.bulletPrefab, position, Quaternion.Euler(rotation))
-                .GetComponent<NetworkedObject>().Spawn();
+            var bullet = Singleton.Get<BulletComponent>();
+
+            if (bullet == null)
+            {
+                Singleton.Push(Instantiate(Singleton.bulletPrefab, position, Quaternion.Euler(rotation)));
+            }
+            else
+            {
+                bullet.transform.position = position;
+                bullet.transform.rotation = Quaternion.Euler(rotation);
+            }
         }
     }
 }

@@ -24,7 +24,7 @@ public class ServerFlowManager : MonoBehaviour
     {
         if (e.Collider.tag == "Wall")
         {
-            Destroy(e.Bullet.gameObject);
+            PoolManager.Singleton.Pull(e.Bullet);
         }
 
         if (e.Collider.tag == "Player")
@@ -35,7 +35,7 @@ public class ServerFlowManager : MonoBehaviour
                 connector.Damage(e.Bullet.Damage);
             }
 
-            Destroy(e.Bullet.gameObject);
+            PoolManager.Singleton.Pull(e.Bullet);
         }
     }
 
@@ -51,7 +51,7 @@ public class ServerFlowManager : MonoBehaviour
 
                 p.GetComponent<PlayerConnector>().AddAmmo(e.Ammo.Amount);
 
-                Destroy(e.Ammo.gameObject);
+                PoolManager.Singleton.Pull(e.Ammo);
             }
         }
     }

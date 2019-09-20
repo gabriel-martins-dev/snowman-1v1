@@ -550,6 +550,7 @@ MonoBehaviour:
   - {fileID: 119222155}
   pickupAreaLeftUpperCorner: {fileID: 447450508}
   pickupAreaRightLowerCorner: {fileID: 746244999}
+  poolInactivePosition: {fileID: 1229644400}
 --- !u!4 &575290636
 Transform:
   m_ObjectHideFlags: 0
@@ -565,6 +566,7 @@ Transform:
   - {fileID: 119222155}
   - {fileID: 1169741765}
   - {fileID: 955627585}
+  - {fileID: 1229644400}
   m_Father: {fileID: 1720237701}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -904,6 +906,36 @@ Transform:
   - {fileID: 376483674}
   m_Father: {fileID: 575290636}
   m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1229644399
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1229644400}
+  m_Layer: 0
+  m_Name: Trash
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1229644400
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1229644399}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -999, y: -999, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 575290636}
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1565167350
 GameObject:
@@ -1256,7 +1288,7 @@ GameObject:
   - component: {fileID: 1801615387}
   - component: {fileID: 1801615386}
   m_Layer: 0
-  m_Name: GameSpawnManager
+  m_Name: PoolManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1288,10 +1320,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ff3f5e30a814874fb6e1f68132ec7cd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  pools:
+  - pickupPrefab: {fileID: 9184004642485448893, guid: 32c07b15cf69f41449291509f7fdd47a,
+      type: 3}
+  - pickupPrefab: {fileID: 2321092789818088150, guid: 22b456011bc2328478da8ddccec24cf1,
+      type: 3}
   bulletPrefab: {fileID: 1773573707830535781, guid: 32c07b15cf69f41449291509f7fdd47a,
     type: 3}
   pickupPrefab: {fileID: 4633571994689357929, guid: 22b456011bc2328478da8ddccec24cf1,
     type: 3}
+  activePool: []
+  inactivePool: []
 --- !u!114 &1801615387
 MonoBehaviour:
   m_ObjectHideFlags: 0
